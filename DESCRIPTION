@@ -1,13 +1,13 @@
-Package: scde_SAS
+Package: sas.scde
 Type: Package
 Title: Single Cell Differential Expression
 Version: 1.99.4
 Date: 2016-08-26
-Description: The scde_SAS package implements a set of statistical methods for
-    analyzing single-cell RNA-seq data. scde_SAS fits individual error models for
+Description: The sas.scde package implements a set of statistical methods for
+    analyzing single-cell RNA-seq data. sas.scde fits individual error models for
     single-cell RNA-seq measurements. These models can then be used for assessment
     of differential expression between groups of cells, as well as other types of
-    analysis. The scde_SAS package also contains the pagoda framework which applies
+    analysis. The sas.scde package also contains the pagoda framework which applies
     pathway and gene set overdispersion analysis to identify and characterize
     putative cell subpopulations based on transcriptional signatures. The overall
     approach to the differential expression analysis is detailed in the following
@@ -27,8 +27,8 @@ Authors@R: c(
 	         email = "jeanfan@fas.harvard.edu")
 	         )
 Maintainer: Jean Fan <jeanfan@fas.harvard.edu>
-URL: http://pklab.med.harvard.edu/scde_SAS
-BugReports: https://github.com/hms-dbmi/scde_SAS/issues
+URL: http://pklab.med.harvard.edu/sas.scde
+BugReports: https://github.com/hms-dbmi/sas.scde/issues
 License: GPL-2
 LazyData: true
 Depends: R (>= 3.0.0), flexmix

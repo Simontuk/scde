@@ -1,5 +1,5 @@
-#ifndef _scde_SAS_PAGODA_H
-#define _scde_SAS_PAGODA_H
+#ifndef _sas.scde_PAGODA_H
+#define _sas.scde_PAGODA_H
 
 #include <RcppArmadillo.h>
 RcppExport SEXP winsorizeMatrix(SEXP Mat, SEXP Trim); 

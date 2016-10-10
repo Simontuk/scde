@@ -18,7 +18,7 @@ show.app(app, name, browse = TRUE, port = NULL, ip = "127.0.0.1",
 
 \item{ip}{IP on which the server should listen (typically localhost)}
 
-\item{server}{an (optional) Rook server instance (defaults to ___scde_SAS.server)}
+\item{server}{an (optional) Rook server instance (defaults to ___sas.scde.server)}
 }
 \value{
 Rook server instance

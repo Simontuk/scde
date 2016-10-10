@@ -1,5 +1,5 @@
-#ifndef _scde_SAS_MATSLIDEMULT_H
-#define _scde_SAS_MATSLIDEMULT_H
+#ifndef _sas.scde_MATSLIDEMULT_H
+#define _sas.scde_MATSLIDEMULT_H
 
 #include <RcppArmadillo.h>
 

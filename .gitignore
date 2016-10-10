@@ -9,6 +9,6 @@ R/*~
 .Rproj.user
 src/*.o
 src/*.so
-scde_SAS.Rproj
+sas.scde.Rproj
 *_bak
 .*_bak

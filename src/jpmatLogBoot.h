@@ -1,5 +1,5 @@
-#ifndef _scde_SAS_JPMATLOGBOOT_H
-#define _scde_SAS_JPMATLOGBOOT_H
+#ifndef _sas.scde_JPMATLOGBOOT_H
+#define _sas.scde_JPMATLOGBOOT_H
 
 #include <RcppArmadillo.h>
 

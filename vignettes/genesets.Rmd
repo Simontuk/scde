@@ -24,7 +24,7 @@ opts_chunk$set(
     cache.path = 'cache/genesets-',
     cache = TRUE
 )
-library(scde_SAS)
+library(sas.scde)
 data(pollen)
 cd <- pollen
 ```

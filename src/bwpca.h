@@ -1,5 +1,5 @@
-#ifndef _scde_SAS_BWPCA_H
-#define _scde_SAS_BWPCA_H
+#ifndef _sas.scde_BWPCA_H
+#define _sas.scde_BWPCA_H
 
 #include <RcppArmadillo.h>
 

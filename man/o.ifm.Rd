@@ -5,7 +5,7 @@
 \alias{o.ifm}
 \title{Sample error model}
 \description{
-scde_SAS error model generated from a subset of Saiful et al. 2011 dataset containing first 20 ES and 20 MEF cells.
+sas.scde error model generated from a subset of Saiful et al. 2011 dataset containing first 20 ES and 20 MEF cells.
 }
 \references{
 \url{http://www.ncbi.nlm.nih.gov/pubmed/21543516}
