@@ -1,15 +1,15 @@
 ##' Single-cell Differential Expression (with Pathway And Gene set Overdispersion Analysis)
 ##'
-##' The scde package implements a set of statistical methods for analyzing single-cell RNA-seq data.
-##' scde fits individual error models for single-cell RNA-seq measurements. These models can then be used for
+##' The scde_SAS package implements a set of statistical methods for analyzing single-cell RNA-seq data.
+##' scde_SAS fits individual error models for single-cell RNA-seq measurements. These models can then be used for
 ##' assessment of differential expression between groups of cells, as well as other types of analysis.
-##' The scde package also contains the pagoda framework which applies pathway and gene set overdispersion analysis
+##' The scde_SAS package also contains the pagoda framework which applies pathway and gene set overdispersion analysis
 ##' to identify and characterize putative cell subpopulations based on transcriptional signatures.
 ##' See vignette("diffexp") for a brief tutorial on differential expression analysis.
 ##' See vignette("pagoda") for a brief tutorial on pathway and gene set overdispersion analysis to identify and characterize cell subpopulations.
-##' More extensive tutorials are available at \url{http://pklab.med.harvard.edu/scde/index.html}.
+##' More extensive tutorials are available at \url{http://pklab.med.harvard.edu/scde_SAS/index.html}.
 ##'  (test)
-##' @name scde
+##' @name scde_SAS
 ##' @docType package
 ##' @author Peter Kharchenko \email{Peter_Kharchenko@@hms.harvard.edu}
 ##' @author Jean Fan \email{jeanfan@@fas.harvard.edu}
@@ -39,7 +39,7 @@ NULL
 
 ##' Sample error model
 ##'
-##' SCDE error model generated from a subset of Saiful et al. 2011 dataset containing first 20 ES and 20 MEF cells.
+##' scde_SAS error model generated from a subset of Saiful et al. 2011 dataset containing first 20 ES and 20 MEF cells.
 ##'
 ##' @name o.ifm
 ##' @docType data
@@ -49,7 +49,7 @@ NULL
 
 ##' Sample error model
 ##'
-##' SCDE error model generated from the Pollen et al. 2014 dataset.
+##' scde_SAS error model generated from the Pollen et al. 2014 dataset.
 ##'
 ##' @name knn
 ##' @docType data
@@ -61,7 +61,7 @@ NULL
 #
 # Numerically-derived correction for NB->chi squared approximation stored as an local regression model
 #
-# @name scde.edff
+# @name scde_SAS.edff
 
 
 ################################# Generic methods
@@ -134,7 +134,7 @@ clean.counts <- function(counts, min.lib.size = 1.8e3, min.reads = 10, min.detec
     return(counts)
 }
 
-################################# SCDE Methods
+################################# scde_SAS Methods
 
 ##' Fit single-cell error/regression models
 ##'
@@ -162,7 +162,7 @@ clean.counts <- function(counts, min.lib.size = 1.8e3, min.reads = 10, min.detec
 ##'
 ##' @return a model matrix, with rows corresponding to different cells, and columns representing different parameters of the determined models
 ##'
-##' @useDynLib scde
+##' @useDynLib scde_SAS
 ##'
 ##' @examples
 ##' data(es.mef.small)
@@ -170,11 +170,11 @@ clean.counts <- function(counts, min.lib.size = 1.8e3, min.reads = 10, min.detec
 ##' sg <- factor(gsub("(MEF|ESC).*", "\\1", colnames(cd)), levels = c("ESC", "MEF"))
 ##' names(sg) <- colnames(cd)
 ##' \donttest{
-##' o.ifm <- scde.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
+##' o.ifm <- scde_SAS.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
 ##' }
 ##'
 ##' @export
-scde.error.models <- function(counts, groups = NULL, min.nonfailed = 3, threshold.segmentation = TRUE, min.count.threshold = 4, zero.count.threshold = min.count.threshold, zero.lambda = 0.1, save.crossfit.plots = FALSE, save.model.plots = TRUE, n.cores = 12, min.size.entries = 2e3, max.pairs = 5000, min.pairs.per.cell = 10, verbose = 0, linear.fit = TRUE, local.theta.fit = linear.fit, theta.fit.range = c(1e-2, 1e2)) {
+scde_SAS.error.models <- function(counts, groups = NULL, min.nonfailed = 3, threshold.segmentation = TRUE, min.count.threshold = 4, zero.count.threshold = min.count.threshold, zero.lambda = 0.1, save.crossfit.plots = FALSE, save.model.plots = TRUE, n.cores = 12, min.size.entries = 2e3, max.pairs = 5000, min.pairs.per.cell = 10, verbose = 0, linear.fit = TRUE, local.theta.fit = linear.fit, theta.fit.range = c(1e-2, 1e2)) {
     # default same group
     if(is.null(groups)) {
         groups <- as.factor(rep("cell", ncol(counts)))
@@ -204,7 +204,7 @@ scde.error.models <- function(counts, groups = NULL, min.nonfailed = 3, threshol
 ##'
 ##' Use existing count data to determine a prior distribution of genes in the dataset
 ##'
-##' @param models models determined by \code{\link{scde.error.models}}
+##' @param models models determined by \code{\link{scde_SAS.error.models}}
 ##' @param counts count matrix
 ##' @param length.out number of points (resolution) of the expression magnitude grid (default: 400). Note: larger numbers will linearly increase memory/CPU demands.
 ##' @param show.plot show the estimate posterior
@@ -218,13 +218,13 @@ scde.error.models <- function(counts, groups = NULL, min.nonfailed = 3, threshol
 ##' @examples
 ##' data(es.mef.small)
 ##' cd <- clean.counts(es.mef.small, min.lib.size=1000, min.reads = 1, min.detected = 1)
-##' data(o.ifm)  # Load precomputed model. Use ?scde.error.models to see how o.ifm was generated
-##' o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+##' data(o.ifm)  # Load precomputed model. Use ?scde_SAS.error.models to see how o.ifm was generated
+##' o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
 ##'
 ##' @export
-scde.expression.prior <- function(models, counts, length.out = 400, show.plot = FALSE, pseudo.count = 1, bw = 0.1, max.quantile = 1, max.value = NULL) {
-    fpkm <- scde.expression.magnitude(models, counts)
-    fail <- scde.failure.probability(models, counts = counts)
+scde_SAS.expression.prior <- function(models, counts, length.out = 400, show.plot = FALSE, pseudo.count = 1, bw = 0.1, max.quantile = 1, max.value = NULL) {
+    fpkm <- scde_SAS.expression.magnitude(models, counts)
+    fail <- scde_SAS.failure.probability(models, counts = counts)
     fpkm <- log10(exp(as.matrix(fpkm))+1)
     wts <- as.numeric(as.matrix(1-fail[, colnames(fpkm)]))
     wts <- wts/sum(wts)
@@ -258,9 +258,9 @@ scde.expression.prior <- function(models, counts, length.out = 400, show.plot = 
 ##'
 ##' Use the individual cell error models to test for differential expression between two groups of cells.
 ##'
-##' @param models models determined by \code{\link{scde.error.models}}
+##' @param models models determined by \code{\link{scde_SAS.error.models}}
 ##' @param counts read count matrix
-##' @param prior gene expression prior as determined by \code{\link{scde.expression.prior}}
+##' @param prior gene expression prior as determined by \code{\link{scde_SAS.expression.prior}}
 ##' @param groups a factor determining the two groups of cells being compared. The factor entries should correspond to the rows of the model matrix. The factor should have two levels. NAs are allowed (cells will be omitted from comparison).
 ##' @param batch a factor (corresponding to rows of the model matrix) specifying batch assignment of each cell, to perform batch correction
 ##' @param n.randomizations number of bootstrap randomizations to be performed
@@ -292,16 +292,16 @@ scde.expression.prior <- function(models, counts, length.out = 400, show.plot = 
 ##' sg <- factor(gsub("(MEF|ESC).*", "\\1", colnames(cd)), levels = c("ESC", "MEF"))
 ##' names(sg) <- colnames(cd)
 ##' \donttest{
-##' o.ifm <- scde.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
-##' o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+##' o.ifm <- scde_SAS.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
+##' o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
 ##' # make sure groups corresponds to the models (o.ifm)
 ##' groups <- factor(gsub("(MEF|ESC).*", "\\1", rownames(o.ifm)), levels = c("ESC", "MEF"))
 ##' names(groups) <- row.names(o.ifm)
-##' ediff <- scde.expression.difference(o.ifm, cd, o.prior, groups = groups, n.randomizations = 100, n.cores = n.cores, verbose = 1)
+##' ediff <- scde_SAS.expression.difference(o.ifm, cd, o.prior, groups = groups, n.randomizations = 100, n.cores = n.cores, verbose = 1)
 ##' }
 ##'
 ##' @export
-scde.expression.difference <- function(models, counts, prior, groups = NULL, batch = NULL, n.randomizations = 150, n.cores = 10, batch.models = models, return.posteriors = FALSE, expectation=0, verbose = 0) {
+scde_SAS.expression.difference <- function(models, counts, prior, groups = NULL, batch = NULL, n.randomizations = 150, n.cores = 10, batch.models = models, return.posteriors = FALSE, expectation=0, verbose = 0) {
     if(!all(rownames(models) %in% colnames(counts))) {
         stop("ERROR: provided count data does not cover all of the cells specified in the model matrix")
     }
@@ -353,7 +353,7 @@ scde.expression.difference <- function(models, counts, prior, groups = NULL, bat
             cat("calculating batch posteriors\n")
         }
         batch.jpl <- tapply(seq_len(nrow(models)), groups, function(ii) {
-            scde.posteriors(models = batch.models, counts = counts, prior = prior, batch = batch, composition = table(batch[ii]), n.cores = n.cores, n.randomizations = n.randomizations, return.individual.posteriors = FALSE)
+            scde_SAS.posteriors(models = batch.models, counts = counts, prior = prior, batch = batch, composition = table(batch[ii]), n.cores = n.cores, n.randomizations = n.randomizations, return.individual.posteriors = FALSE)
         })
         if(verbose) {
             cat("calculating batch differences\n")
@@ -370,7 +370,7 @@ scde.expression.difference <- function(models, counts, prior, groups = NULL, bat
 
     # fit joint posteriors for each group
     jpl <- tapply(seq_len(nrow(models)), groups, function(ii) {
-        scde.posteriors(models = models[ii, , drop = FALSE], counts = counts[, ii, drop = FALSE], prior = prior, n.cores = n.cores, n.randomizations = n.randomizations)
+        scde_SAS.posteriors(models = models[ii, , drop = FALSE], counts = counts[, ii, drop = FALSE], prior = prior, n.cores = n.cores, n.randomizations = n.randomizations)
     })
     if(verbose) {
         cat("calculating difference posterior\n")
@@ -411,9 +411,9 @@ scde.expression.difference <- function(models, counts, prior, groups = NULL, bat
 ##' View differential expression results in a browser
 ##'
 ##' Launches a browser app that shows the differential expression results, allowing to sort, filter, etc.
-##' The arguments generally correspond to the \code{scde.expression.difference()} call, except that the results of that call are also passed here. Requires \code{Rook} and \code{rjson} packages to be installed.
+##' The arguments generally correspond to the \code{scde_SAS.expression.difference()} call, except that the results of that call are also passed here. Requires \code{Rook} and \code{rjson} packages to be installed.
 ##'
-##' @param results result object returned by \code{scde.expression.difference()}. Note to browse group posterior levels, use \code{return.posteriors = TRUE} in the \code{scde.expression.difference()} call.
+##' @param results result object returned by \code{scde_SAS.expression.difference()}. Note to browse group posterior levels, use \code{return.posteriors = TRUE} in the \code{scde_SAS.expression.difference()} call.
 ##' @param models model matrix
 ##' @param counts count matrix
 ##' @param prior prior
@@ -432,20 +432,20 @@ scde.expression.difference <- function(models, counts, prior, groups = NULL, bat
 ##' sg <- factor(gsub("(MEF|ESC).*", "\\1", colnames(cd)), levels = c("ESC", "MEF"))
 ##' names(sg) <- colnames(cd)
 ##' \donttest{
-##' o.ifm <- scde.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
-##' o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+##' o.ifm <- scde_SAS.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
+##' o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
 ##' # make sure groups corresponds to the models (o.ifm)
 ##' groups <- factor(gsub("(MEF|ESC).*", "\\1", rownames(o.ifm)), levels = c("ESC", "MEF"))
 ##' names(groups) <- row.names(o.ifm)
-##' ediff <- scde.expression.difference(o.ifm, cd, o.prior, groups = groups, n.randomizations = 100, n.cores = 10, verbose = 1)
-##' scde.browse.diffexp(ediff, o.ifm, cd, o.prior, groups = groups, geneLookupURL="http://www.informatics.jax.org/searchtool/Search.do?query={0}")  # creates browser
+##' ediff <- scde_SAS.expression.difference(o.ifm, cd, o.prior, groups = groups, n.randomizations = 100, n.cores = 10, verbose = 1)
+##' scde_SAS.browse.diffexp(ediff, o.ifm, cd, o.prior, groups = groups, geneLookupURL="http://www.informatics.jax.org/searchtool/Search.do?query={0}")  # creates browser
 ##' }
 ##'
 ##' @export
-scde.browse.diffexp <- function(results, models, counts, prior, groups = NULL, batch = NULL, geneLookupURL = NULL, server = NULL, name = "scde", port = NULL) {
+scde_SAS.browse.diffexp <- function(results, models, counts, prior, groups = NULL, batch = NULL, geneLookupURL = NULL, server = NULL, name = "scde_SAS", port = NULL) {
     #require(Rook)
     #require(rjson)
-    if(is.null(server)) { server <- get.scde.server(port) }
+    if(is.null(server)) { server <- get.scde_SAS.server(port) }
     sa <- ViewDiff$new(results, models, counts, prior, groups = groups, batch = batch, geneLookupURL = geneLookupURL)
     server$add(app = sa, name = name)
     browseURL(paste(server$full_url(name), "index.html", sep = "/"))
@@ -463,7 +463,7 @@ scde.browse.diffexp <- function(results, models, counts, prior, groups = NULL, b
 ##' @param browse whether a call should be made for browser to show the app
 ##' @param port optional port on which the server should be initiated
 ##' @param ip IP on which the server should listen (typically localhost)
-##' @param server an (optional) Rook server instance (defaults to ___scde.server)
+##' @param server an (optional) Rook server instance (defaults to ___scde_SAS.server)
 ##'
 ##' @examples
 ##' \donttest{
@@ -480,7 +480,7 @@ show.app <- function(app, name, port, ip, browse = TRUE,  server = NULL) {
   name <- gsub("[^[:alnum:.]]", "_", name)
 
   if(is.null(server)) {
-    server <- get.scde.server(port=port,ip=ip)
+    server <- get.scde_SAS.server(port=port,ip=ip)
   }
   server$add(app = app, name = name)
   if(is.function(server$listenPort)) {
@@ -505,14 +505,14 @@ show.pagoda.app.table <- function(name="applist",...) {
   show.app(x,name=name,...)
 }
 
-# get SCDE server from saved session
-get.scde.server <- function(port,ip) {
-    if(exists("___scde.server", envir = globalenv())) {
-        server <- get("___scde.server", envir = globalenv())
+# get scde_SAS server from saved session
+get.scde_SAS.server <- function(port,ip) {
+    if(exists("___scde_SAS.server", envir = globalenv())) {
+        server <- get("___scde_SAS.server", envir = globalenv())
     } else {
         require(Rook)
         server <- Rhttpd$new()
-        assign("___scde.server", server, envir = globalenv())
+        assign("___scde_SAS.server", server, envir = globalenv())
         if(!missing(ip)) {
           if(missing(port)) {
             server$start(listen = ip)
@@ -538,9 +538,9 @@ get.scde.server <- function(port,ip) {
 ##'
 ##' Calculates expression magnitude posteriors for the individual cells, and then uses bootstrap resampling to calculate a joint expression posterior for all the specified cells. Alternatively during batch-effect correction procedure, the joint posterior can be calculated for a random composition of cells of different groups (see \code{batch} and \code{composition} parameters).
 ##'
-##' @param models models models determined by \code{\link{scde.error.models}}
+##' @param models models models determined by \code{\link{scde_SAS.error.models}}
 ##' @param counts read count matrix
-##' @param prior gene expression prior as determined by \code{\link{scde.expression.prior}}
+##' @param prior gene expression prior as determined by \code{\link{scde_SAS.expression.prior}}
 ##' @param n.randomizations number of bootstrap iterations to perform
 ##' @param batch a factor describing which batch group each cell (i.e. each row of \code{models} matrix) belongs to
 ##' @param composition a vector describing the batch composition of a group to be sampled
@@ -557,13 +557,13 @@ get.scde.server <- function(port,ip) {
 ##' @examples
 ##' data(es.mef.small)
 ##' cd <- clean.counts(es.mef.small, min.lib.size=1000, min.reads = 1, min.detected = 1)
-##' data(o.ifm)  # Load precomputed model. Use ?scde.error.models to see how o.ifm was generated
-##' o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+##' data(o.ifm)  # Load precomputed model. Use ?scde_SAS.error.models to see how o.ifm was generated
+##' o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
 ##' # calculate joint posteriors
-##' jp <- scde.posteriors(o.ifm, cd, o.prior, n.cores = 1)
+##' jp <- scde_SAS.posteriors(o.ifm, cd, o.prior, n.cores = 1)
 ##'
 ##' @export
-scde.posteriors <- function(models, counts, prior, n.randomizations = 100, batch = NULL, composition = NULL, return.individual.posteriors = FALSE, return.individual.posterior.modes = FALSE, ensemble.posterior = FALSE, n.cores = 20) {
+scde_SAS.posteriors <- function(models, counts, prior, n.randomizations = 100, batch = NULL, composition = NULL, return.individual.posteriors = FALSE, return.individual.posterior.modes = FALSE, ensemble.posterior = FALSE, n.cores = 20) {
     if(!all(rownames(models) %in% colnames(counts))) { stop("ERROR: provided count data does not cover all of the cells specified in the model matrix") }
     if(!is.null(batch)) { # calculating batch-sampled posteriors instead of evenly sampled ones
         if(is.null(composition)) { stop("ERROR: group composition must be provided if the batch argument is passed") }
@@ -610,9 +610,9 @@ scde.posteriors <- function(models, counts, prior, n.randomizations = 100, batch
             uci <- do.call(cbind, lapply(seq_len(ncol(counts)), function(i) match(counts[ii, i, drop = FALSE], ucl[[i]])-1))
             #x <- logBootPosterior(models, ucl, uci, marginals, n.randomizations, 1, postflag)
             if(!is.null(batch)) {
-                x <- .Call("logBootBatchPosterior", mm, ucl, uci, marginals, batchil, composition, n.randomizations, ii[1], postflag, localthetaflag, squarelogitconc, PACKAGE = "scde")
+                x <- .Call("logBootBatchPosterior", mm, ucl, uci, marginals, batchil, composition, n.randomizations, ii[1], postflag, localthetaflag, squarelogitconc, PACKAGE = "scde_SAS")
             } else {
-                x <- .Call("logBootPosterior", mm, ucl, uci, marginals, n.randomizations, ii[1], postflag, localthetaflag, squarelogitconc, ensembleflag, PACKAGE = "scde")
+                x <- .Call("logBootPosterior", mm, ucl, uci, marginals, n.randomizations, ii[1], postflag, localthetaflag, squarelogitconc, ensembleflag, PACKAGE = "scde_SAS")
             }
         }, n.cores = n.cores)
         if(postflag == 0) {
@@ -632,9 +632,9 @@ scde.posteriors <- function(models, counts, prior, n.randomizations = 100, batch
         uci <- do.call(cbind, lapply(seq_len(ncol(counts)), function(i) match(counts[, i, drop = FALSE], ucl[[i]])-1))
         #x <- logBootPosterior(models, ucl, uci, marginals, n.randomizations, 1, postflag)
         if(!is.null(batch)) {
-            x <- .Call("logBootBatchPosterior", mm, ucl, uci, marginals, batchil, composition, n.randomizations, 1, postflag, localthetaflag, squarelogitconc, PACKAGE = "scde")
+            x <- .Call("logBootBatchPosterior", mm, ucl, uci, marginals, batchil, composition, n.randomizations, 1, postflag, localthetaflag, squarelogitconc, PACKAGE = "scde_SAS")
         } else {
-            x <- .Call("logBootPosterior", mm, ucl, uci, marginals, n.randomizations, 1, postflag, localthetaflag, squarelogitconc, ensembleflag, PACKAGE = "scde")
+            x <- .Call("logBootPosterior", mm, ucl, uci, marginals, n.randomizations, 1, postflag, localthetaflag, squarelogitconc, ensembleflag, PACKAGE = "scde_SAS")
         }
     }
     if(postflag == 0) {
@@ -678,7 +678,7 @@ scde.posteriors <- function(models, counts, prior, n.randomizations = 100, batch
 ##'
 ##' Return point estimates of expression magnitudes (log FPM) of each gene across a set of cells, based on the regression slopes determined during the model fitting procedure.
 ##'
-##' @param models models determined by \code{\link{scde.error.models}}
+##' @param models models determined by \code{\link{scde_SAS.error.models}}
 ##' @param counts count matrix
 ##'
 ##' @return a matrix of expression magnitudes on a natural log scale (rows - genes, columns - cells)
@@ -686,12 +686,12 @@ scde.posteriors <- function(models, counts, prior, n.randomizations = 100, batch
 ##' @examples
 ##' data(es.mef.small)
 ##' cd <- clean.counts(es.mef.small, min.lib.size=1000, min.reads = 1, min.detected = 1)
-##' data(o.ifm)  # Load precomputed model. Use ?scde.error.models to see how o.ifm was generated
+##' data(o.ifm)  # Load precomputed model. Use ?scde_SAS.error.models to see how o.ifm was generated
 ##' # get expression magnitude estimates
-##' lfpm <- scde.expression.magnitude(o.ifm, cd)
+##' lfpm <- scde_SAS.expression.magnitude(o.ifm, cd)
 ##'
 ##' @export
-scde.expression.magnitude <- function(models, counts) {
+scde_SAS.expression.magnitude <- function(models, counts) {
     if(!all(rownames(models) %in% colnames(counts))) { stop("ERROR: provided count data does not cover all of the cells specified in the model matrix") }
     t((t(log(counts[, rownames(models), drop = FALSE]))-models$corr.b)/models$corr.a)
 }
@@ -703,7 +703,7 @@ scde.expression.magnitude <- function(models, counts) {
 ##' Calculate drop-out probabilities given a set of counts or expression magnitudes
 ##'
 ##' Returns estimated drop-out probability for each cell (row of \code{models} matrix), given either an expression magnitude
-##' @param models models determined by \code{\link{scde.error.models}}
+##' @param models models determined by \code{\link{scde_SAS.error.models}}
 ##' @param magnitudes a vector (\code{length(counts) == nrows(models)}) or a matrix (columns correspond to cells) of expression magnitudes, given on a log scale
 ##' @param counts a vector (\code{length(counts) == nrows(models)}) or a matrix (columns correspond to cells) of read counts from which the expression magnitude should be estimated
 ##'
@@ -712,20 +712,20 @@ scde.expression.magnitude <- function(models, counts) {
 ##' @examples
 ##' data(es.mef.small)
 ##' cd <- clean.counts(es.mef.small, min.lib.size=1000, min.reads = 1, min.detected = 1)
-##' data(o.ifm)  # Load precomputed model. Use ?scde.error.models to see how o.ifm was generated
-##' o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+##' data(o.ifm)  # Load precomputed model. Use ?scde_SAS.error.models to see how o.ifm was generated
+##' o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
 ##' # calculate probability of observing a drop out at a given set of magnitudes in different cells
 ##' mags <- c(1.0, 1.5, 2.0)
-##' p <- scde.failure.probability(o.ifm, magnitudes = mags)
+##' p <- scde_SAS.failure.probability(o.ifm, magnitudes = mags)
 ##' # calculate probability of observing the dropout at a magnitude corresponding to the
 ##' # number of reads actually observed in each cell
-##' self.p <- scde.failure.probability(o.ifm, counts = cd)
+##' self.p <- scde_SAS.failure.probability(o.ifm, counts = cd)
 ##'
 ##' @export
-scde.failure.probability <- function(models, magnitudes = NULL, counts = NULL) {
+scde_SAS.failure.probability <- function(models, magnitudes = NULL, counts = NULL) {
     if(is.null(magnitudes)) {
         if(!is.null(counts)) {
-            magnitudes <- scde.expression.magnitude(models, counts)
+            magnitudes <- scde_SAS.expression.magnitude(models, counts)
         } else {
             stop("ERROR: either magnitudes or counts should be provided")
         }
@@ -775,12 +775,12 @@ scde.failure.probability <- function(models, magnitudes = NULL, counts = NULL) {
 ##' @examples
 ##' data(es.mef.small)
 ##' cd <- clean.counts(es.mef.small, min.lib.size=1000, min.reads = 1, min.detected = 1)
-##' data(o.ifm)  # Load precomputed model. Use ?scde.error.models to see how o.ifm was generated
-##' o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
-##' scde.test.gene.expression.difference("Tdh", models = o.ifm, counts = cd, prior = o.prior)
+##' data(o.ifm)  # Load precomputed model. Use ?scde_SAS.error.models to see how o.ifm was generated
+##' o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+##' scde_SAS.test.gene.expression.difference("Tdh", models = o.ifm, counts = cd, prior = o.prior)
 ##'
 ##' @export
-scde.test.gene.expression.difference <- function(gene, models, counts, prior, groups = NULL, batch = NULL, batch.models = models, n.randomizations = 1e3, show.plots = TRUE, return.details = FALSE, verbose = FALSE, ratio.range = NULL, show.individual.posteriors = TRUE, expectation=0, n.cores = 1) {
+scde_SAS.test.gene.expression.difference <- function(gene, models, counts, prior, groups = NULL, batch = NULL, batch.models = models, n.randomizations = 1e3, show.plots = TRUE, return.details = FALSE, verbose = FALSE, ratio.range = NULL, show.individual.posteriors = TRUE, expectation=0, n.cores = 1) {
     if(!gene %in% rownames(counts)) {
         stop("ERROR: specified gene (", gene, ") is not found in the count data")
     }
@@ -805,7 +805,7 @@ scde.test.gene.expression.difference <- function(gene, models, counts, prior, gr
 
     # calculate joint posteriors
     jpl <- tapply(seq_len(nrow(models)), groups, function(ii) {
-        scde.posteriors(models = models[ii, , drop = FALSE], counts = counts[, ii, drop = FALSE], prior = prior, n.cores = n.cores, n.randomizations = n.randomizations, return.individual.posteriors = TRUE)
+        scde_SAS.posteriors(models = models[ii, , drop = FALSE], counts = counts[, ii, drop = FALSE], prior = prior, n.cores = n.cores, n.randomizations = n.randomizations, return.individual.posteriors = TRUE)
     })
 
     bdiffp <- calculate.ratio.posterior(jpl[[1]]$jp, jpl[[2]]$jp, prior, n.cores = n.cores)
@@ -836,7 +836,7 @@ scde.test.gene.expression.difference <- function(gene, models, counts, prior, gr
         }
         # calculate batch posterior
         batch.jpl <- tapply(seq_len(nrow(models)), groups, function(ii) {
-            scde.posteriors(models = batch.models, counts = counts, prior = prior, batch = batch, composition = table(batch[ii]), n.cores = n.cores, n.randomizations = n.randomizations, return.individual.posteriors = FALSE)
+            scde_SAS.posteriors(models = batch.models, counts = counts, prior = prior, batch = batch, composition = table(batch[ii]), n.cores = n.cores, n.randomizations = n.randomizations, return.individual.posteriors = FALSE)
         })
         batch.bdiffp <- calculate.ratio.posterior(batch.jpl[[1]], batch.jpl[[2]], prior, n.cores = n.cores)
         a.bdiffp <- calculate.ratio.posterior(bdiffp, batch.bdiffp, prior = data.frame(x = as.numeric(colnames(bdiffp)), y = rep(1/ncol(bdiffp), ncol(bdiffp))), skip.prior.adjustment = TRUE)
@@ -948,7 +948,7 @@ scde.test.gene.expression.difference <- function(gene, models, counts, prior, gr
 
 
 # fit models to external (bulk) reference
-##' Fit scde models relative to provided set of expression magnitudes
+##' Fit scde_SAS models relative to provided set of expression magnitudes
 ##'
 ##' If group-average expression magnitudes are available (e.g. from bulk measurement), this method can be used
 ##' to fit individual cell error models relative to that reference
@@ -963,26 +963,26 @@ scde.test.gene.expression.difference <- function(gene, models, counts, prior, gr
 ##' @param plot.filename model fit pdf filename
 ##' @param verbose verbose level
 ##'
-##' @return matrix of scde models
+##' @return matrix of scde_SAS models
 ##'
 ##' @examples
 ##' data(es.mef.small)
 ##' cd <- clean.counts(es.mef.small, min.lib.size=1000, min.reads = 1, min.detected = 1)
 ##' \donttest{
-##' o.ifm <- scde.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
-##' o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+##' o.ifm <- scde_SAS.error.models(counts = cd, groups = sg, n.cores = 10, threshold.segmentation = TRUE)
+##' o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
 ##' # calculate joint posteriors across all cells
-##' jp <- scde.posteriors(models = o.ifm, cd, o.prior, n.cores = 10, return.individual.posterior.modes = TRUE, n.randomizations = 100)
+##' jp <- scde_SAS.posteriors(models = o.ifm, cd, o.prior, n.cores = 10, return.individual.posterior.modes = TRUE, n.randomizations = 100)
 ##' # use expected expression magnitude for each gene
 ##' av.mag <- as.numeric(jp$jp %*% as.numeric(colnames(jp$jp)))
 ##' # translate into counts
 ##' av.mag.counts <- as.integer(round(av.mag))
 ##' # now, fit alternative models using av.mag as a reference (normally this would correspond to bulk RNA expression magnitude)
-##' ref.models <- scde.fit.models.to.reference(cd, av.mag.counts, n.cores = 1)
+##' ref.models <- scde_SAS.fit.models.to.reference(cd, av.mag.counts, n.cores = 1)
 ##' }
 ##'
 ##' @export
-scde.fit.models.to.reference <- function(counts, reference, n.cores = 10, zero.count.threshold = 1, nrep = 1, save.plots = FALSE, plot.filename = "reference.model.fits.pdf", verbose = 0, min.fpm = 1) {
+scde_SAS.fit.models.to.reference <- function(counts, reference, n.cores = 10, zero.count.threshold = 1, nrep = 1, save.plots = FALSE, plot.filename = "reference.model.fits.pdf", verbose = 0, min.fpm = 1) {
     return.compressed.models <- TRUE
     verbose <- 1
     ids <- colnames(counts)
@@ -1078,7 +1078,7 @@ bwpca <- function(mat, matw = NULL, npcs = 2, nstarts = 1, smooth = 0, em.tol = 
     }
     if(center) { mat <- t(t(mat)-colSums(mat*matw)/colSums(matw)) }
 
-    res <- .Call("baileyWPCA", mat, matw, npcs, nstarts, smooth, em.tol, em.maxiter, seed, n.shuffles, PACKAGE = "scde")
+    res <- .Call("baileyWPCA", mat, matw, npcs, nstarts, smooth, em.tol, em.maxiter, seed, n.shuffles, PACKAGE = "scde_SAS")
     #res <- bailey.wpca(mat, matw, npcs, nstarts, smooth, em.tol, em.maxiter, seed)
     rownames(res$rotation) <- colnames(mat)
     rownames(res$scores) <- rownames(mat)
@@ -1108,7 +1108,7 @@ bwpca <- function(mat, matw = NULL, npcs = 2, nstarts = 1, smooth = 0, em.tol = 
 ##' @export
 winsorize.matrix <- function(mat, trim) {
     if(trim  >  0.5) { trim <- trim/ncol(mat)  }
-    wm <- .Call("winsorizeMatrix", mat, trim, PACKAGE = "scde")
+    wm <- .Call("winsorizeMatrix", mat, trim, PACKAGE = "scde_SAS")
     rownames(wm) <- rownames(mat)
     colnames(wm) <- colnames(mat)
     return(wm)
@@ -1356,7 +1356,7 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
     edf.damping <- 1
 
     # load NB extensions
-    data(scde.edff, envir = environment())
+    data(scde_SAS.edff, envir = environment())
 
     # subset cd to the cells occurring in the models
     if(verbose) { cat("checking counts ... ") }
@@ -1416,13 +1416,13 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
     if(verbose) { cat("calculating modes ... ") }
     if(is.null(prior)) {
         if(verbose) { cat("prior ") }
-        prior <- scde.expression.prior(models = models, counts = cd, length.out = 400, show.plot = FALSE)
+        prior <- scde_SAS.expression.prior(models = models, counts = cd, length.out = 400, show.plot = FALSE)
     }
     # dataset-wide mode
     if(use.mean.fpm) { # use mean fpm across cells
-        avmodes <- modes <- rowMeans(exp(scde.expression.magnitude(models, cd)))
+        avmodes <- modes <- rowMeans(exp(scde_SAS.expression.magnitude(models, cd)))
     } else { # use joint posterior mode/expected value
-        jp <- scde.posteriors(models = models, cd, prior, n.cores = n.cores, return.individual.posterior.modes = TRUE, n.randomizations = n.randomizations)
+        jp <- scde_SAS.posteriors(models = models, cd, prior, n.cores = n.cores, return.individual.posterior.modes = TRUE, n.randomizations = n.randomizations)
         if(use.expected.value) {
             avmodes <- modes <- (jp$jp %*% as.numeric(colnames(jp$jp)))[, 1]
         } else { # use mode
@@ -1438,9 +1438,9 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
         modes <- tapply(seq_len(nrow(models)), batch, function(ii) {
             if(verbose) { cat(as.character(batch[ii[1]]), " ") }
             if(use.mean.fpm) { # use mean fpm across cells
-                modes <- rowMeans(exp(scde.expression.magnitude(models[ii, ], cd[, ii])))
+                modes <- rowMeans(exp(scde_SAS.expression.magnitude(models[ii, ], cd[, ii])))
             } else { # use joint posterior mode
-                jp <- scde.posteriors(models = models[ii, ], cd[, ii], prior, n.cores = n.cores, return.individual.posterior.modes = TRUE, n.randomizations = n.randomizations)
+                jp <- scde_SAS.posteriors(models = models[ii, ], cd[, ii], prior, n.cores = n.cores, return.individual.posterior.modes = TRUE, n.randomizations = n.randomizations)
                 if(use.expected.value) {
                     modes <- (jp$jp %*% as.numeric(colnames(jp$jp)))[, 1]
                 } else { # use mode
@@ -1451,7 +1451,7 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
         # set dataset-wide mode
         #if(use.mean.fpm) { # use mean fpm across cells
         #  avmodes <- colMeans(do.call(rbind, modes)*as.vector(unlist(tapply(1:length(batch), batch, length))))*length(levels(batch))/length(batch)
-        #jp <- scde.posteriors(models = models, cd, prior, n.cores = n.cores, return.individual.posterior.modes = TRUE, n.randomizations = n.randomizations)
+        #jp <- scde_SAS.posteriors(models = models, cd, prior, n.cores = n.cores, return.individual.posterior.modes = TRUE, n.randomizations = n.randomizations)
         if(verbose) { cat("] ") }
     }
     if(verbose) { cat("done\n") }
@@ -1464,7 +1464,7 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
 
     # dataset-wide version of matw (disregarding batch)
     sfp <- do.call(cbind, lapply(seq_len(ncol(cd)), function(i) ppois(cd[, i]-1, exp(models[i, "fail.r"]), lower.tail = FALSE)))
-    mfp <- scde.failure.probability(models = models, magnitudes = log(avmodes))
+    mfp <- scde_SAS.failure.probability(models = models, magnitudes = log(avmodes))
     ofpT <- do.call(cbind, lapply(seq_len(ncol(cd)), function(i) { # for each cell
         lfpm <- log(avmodes)
         mu <- models$corr.b[i] + models$corr.a[i]*lfpm
@@ -1489,7 +1489,7 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
             #sfp <- do.call(cbind, lapply(ii, function(i) dpois(cd[, i], exp(models[i, "fail.r"]), log = FALSE)))
             sfp <- do.call(cbind, lapply(ii, function(i) ppois(cd[, i]-1, exp(models[i, "fail.r"]), lower.tail = FALSE)))
 
-            mfp <- scde.failure.probability(models = models[ii, ], magnitudes = log(modes[[batch[ii[1]]]]))
+            mfp <- scde_SAS.failure.probability(models = models[ii, ], magnitudes = log(modes[[batch[ii[1]]]]))
             ofpT <- do.call(cbind, lapply(ii, function(i) { # for each cell
                 lfpm <- log(modes[[batch[i]]])
                 mu <- models$corr.b[i] + models$corr.a[i]*lfpm
@@ -1521,7 +1521,7 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
         # adjust very low mu levels except for those that have 0 counts (to avoid inf values)
 
         thetas <- get.corr.theta(v, lfpm, theta.range)
-        edf <- exp(predict(scde.edff, data.frame(lt = log(thetas))))
+        edf <- exp(predict(scde_SAS.edff, data.frame(lt = log(thetas))))
         edf[thetas > 1e3] <- 1
         edf
     }, n.cores = n.cores))
@@ -1545,7 +1545,7 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
             # adjust very low mu levels except for those that have 0 counts (to avoid inf values)
 
             thetas <- get.corr.theta(v, lfpm, theta.range)
-            edf <- exp(predict(scde.edff, data.frame(lt = log(thetas))))
+            edf <- exp(predict(scde_SAS.edff, data.frame(lt = log(thetas))))
             edf[thetas > 1e3] <- 1
             return(edf)
         }, n.cores = n.cores))
@@ -1726,7 +1726,7 @@ pagoda.varnorm <- function(models, counts, batch = NULL, trim = 0, prior = NULL,
     #matw <- 1-0.9*((1-matw)^2) # milder weighting for the the PCA (1-0.9*sp*mf)
     matw <- 1-weight.k*(1-matw) # milder weighting for the the PCA (1-0.9*sp*mf)
     matw <- matw/rowSums(matw)
-    mat <- log10(exp(scde.expression.magnitude(models, cd))+1)
+    mat <- log10(exp(scde_SAS.expression.magnitude(models, cd))+1)
 
     # estimate observed variance (for scaling) before batch adjustments
     #varm <- sqrt(arv/pmax(weightedMatVar(mat, matw, batch = batch), 1e-5)) varm[varm<1e-5] <- 1e-5 mat <- mat*varm
@@ -2559,7 +2559,7 @@ pagoda.reduce.loading.redundancy <- function(tam, pwpca, clpca = NULL, plot = FA
 pagoda.reduce.redundancy <- function(tamr, distance.threshold = 0.2, cluster.method = "complete", distance = NULL, weighted.correlation = TRUE, plot = FALSE, top = Inf, trim = 0, abs = FALSE, ...) {
     if(is.null(distance)) {
         if(weighted.correlation) {
-            distance <- .Call("matWCorr", t(tamr$xv), t(tamr$xvw), PACKAGE = "scde")
+            distance <- .Call("matWCorr", t(tamr$xv), t(tamr$xvw), PACKAGE = "scde_SAS")
             rownames(distance) <- colnames(distance) <- rownames(tamr$xv)
             if(abs) {
                 distance <- stats::as.dist(1-abs(distance), upper = TRUE)
@@ -2659,7 +2659,7 @@ pagoda.cluster.cells <- function(tam, varinfo, method = "ward.D", include.aspect
 
     snam <- sample(colnames(wgm))
 
-    dm <- .Call("matWCorr", wgm, wgwm, PACKAGE = "scde")
+    dm <- .Call("matWCorr", wgm, wgwm, PACKAGE = "scde_SAS")
     dm <- 1-dm
     rownames(dm) <- colnames(dm) <- colnames(wgm)
     wcord <- stats::as.dist(dm, upper = TRUE)
@@ -3532,17 +3532,17 @@ get.ratio.posterior.Z.score <- function(rpost, min.p = 1e-15, expectation=0) {
 
 # calculate a joint posterior matrix with bootstrap
 jpmatLogBoot <- function(Matl, Nboot, Seed) {
-    .Call("jpmatLogBoot", Matl, Nboot, Seed, PACKAGE = "scde")
+    .Call("jpmatLogBoot", Matl, Nboot, Seed, PACKAGE = "scde_SAS")
 }
 
 # similar to the above, but compiles joint by sampling a pre-set
 # number of different types (defined by Comp factor)
 jpmatLogBatchBoot <- function(Matll, Comp, Nboot, Seed) {
-    .Call("jpmatLogBatchBoot", Matll, Comp, Nboot, Seed, PACKAGE = "scde")
+    .Call("jpmatLogBatchBoot", Matll, Comp, Nboot, Seed, PACKAGE = "scde_SAS")
 }
 
 matSlideMult <- function(Mat1, Mat2) {
-    .Call("matSlideMult", Mat1, Mat2, PACKAGE = "scde")
+    .Call("matSlideMult", Mat1, Mat2, PACKAGE = "scde_SAS")
 }
 
 calculate.failure.p <- function(dat, ifm, n.cores = 32) {
@@ -3590,23 +3590,23 @@ get.fpm.estimates <- function(m1, counts) {
 # clean up stale web server reference
 .onAttach <- function(...) {
 
-    if(exists("___scde.server", envir = globalenv())) {
-        old.server <- get("___scde.server", envir = globalenv())
+    if(exists("___scde_SAS.server", envir = globalenv())) {
+        old.server <- get("___scde_SAS.server", envir = globalenv())
         n.apps <- length(old.server$appList)-1
         # TODO fix server rescue...
-        packageStartupMessage("scde: found stale web server instance with ", n.apps, " apps. removing.")
+        packageStartupMessage("scde_SAS: found stale web server instance with ", n.apps, " apps. removing.")
         # remove
-        rm("___scde.server", envir = globalenv())
+        rm("___scde_SAS.server", envir = globalenv())
         return(TRUE)
 
         if(n.apps > 0) {
             require(Rook)
             require(rjson)
-            packageStartupMessage("scde: found stale web server instance with ", n.apps, " apps. restarting.")
-            rm("___scde.server", envir = globalenv()) # remove old instance (apparently saved Rook servers can't just be restarted ... we'll make a new one and re-add all of the apps
+            packageStartupMessage("scde_SAS: found stale web server instance with ", n.apps, " apps. restarting.")
+            rm("___scde_SAS.server", envir = globalenv()) # remove old instance (apparently saved Rook servers can't just be restarted ... we'll make a new one and re-add all of the apps
 
             tryCatch( {
-                server <- get.scde.server(ip = old.server$listenAddr, port = old.server$listenPort) # launch a new server
+                server <- get.scde_SAS.server(ip = old.server$listenAddr, port = old.server$listenPort) # launch a new server
                 if(!is.null(server)) {
                     lapply(old.server$appList[-1], function(sa) {
                         server$add(app = sa$app, name = sa$name)
@@ -3615,15 +3615,15 @@ get.fpm.estimates <- function(m1, counts) {
             }, error = function(e) message(e))
 
         } else {
-            packageStartupMessage("scde: found stale web server instance with ", n.apps, " apps. removing.")
+            packageStartupMessage("scde_SAS: found stale web server instance with ", n.apps, " apps. removing.")
             # remove
-            rm("___scde.server", envir = globalenv())
+            rm("___scde_SAS.server", envir = globalenv())
         }
     }
 }
 
 .onUnload <- function(libpath) {
-    library.dynam.unload("scde", libpath, verbose = TRUE)
+    library.dynam.unload("scde_SAS", libpath, verbose = TRUE)
 }
 
 # rdf : count/fpm data frame
@@ -3686,7 +3686,7 @@ plot.nb2.mixture.fit <- function(m1, rdf, en, do.par = TRUE, n.zero.windows = 50
         # show fit
         fpmo <- order(rdf$fpm[!vpi], decreasing = FALSE)
         if(compressed.models) {
-            #rf <- scde.failure.probability(data.frame(t(m1$model)), magnitudes = log(rdf$fpm))
+            #rf <- scde_SAS.failure.probability(data.frame(t(m1$model)), magnitudes = log(rdf$fpm))
             lines(log10(rdf$fpm[!vpi]+1)[fpmo], log10(exp(m1$model[["corr.a"]]*log(rdf$fpm[!vpi])[fpmo]+m1$model[["corr.b"]])+1))
             if("corr.ltheta.b" %in% names(m1$model)) {
                 # show 95% CI for the non-constant theta fit
@@ -3721,7 +3721,7 @@ plot.nb2.mixture.fit <- function(m1, rdf, en, do.par = TRUE, n.zero.windows = 50
     plot(zf~y, fdf, ylim = c(0, 1), xlim = range(na.omit(log10(rdf$fpm+1))), xlab = "expected FPM", ylab = "fraction of failures", main = "failure model", pch = 16, cex = 0.5)
     ol <- order(rdf$fpm, decreasing = TRUE)
     if(compressed.models) {
-        fp <- scde.failure.probability(data.frame(t(m1$model)), magnitudes = log(rdf$fpm))
+        fp <- scde_SAS.failure.probability(data.frame(t(m1$model)), magnitudes = log(rdf$fpm))
         lines(log10(rdf$fpm[ol]+1), fp[ol], col = 2)
     } else {
         mt <- terms(m1@concomitant@formula, data = rdf)
@@ -4820,7 +4820,7 @@ custom.glm.fit <- function (x, y, weights = rep(1, nobs), start = NULL, etastart
 }
 
 # copied from limma
-weighted.median.scde <- function (x, w, na.rm = FALSE)
+weighted.median.scde_SAS <- function (x, w, na.rm = FALSE)
     #       Weighted median
     #       Gordon Smyth
     #       30 June 2005
@@ -5138,7 +5138,7 @@ pathway.pc.correlation.distance <- function(pcc, xv, n.cores = 1, target.ndf = N
         return(list(i = mi[mo], v = rt[mo]))
     }, n.cores = n.cores)
 
-    x <- .Call("plSemicompleteCor2", pl, PACKAGE = "scde")
+    x <- .Call("plSemicompleteCor2", pl, PACKAGE = "scde_SAS")
 
     if(!is.null(target.ndf)) {
         r <- x$r[upper.tri(x$r)]
@@ -5514,7 +5514,7 @@ ViewDiff <- setRefClass(
                                      <html >
                                      <head >
                                      <meta http-equiv = "Content-Type" content = "text/html; charset = iso-8859-1" >
-                                     <title > SCDE: ', paste(levels(groups), collapse = " vs. "), '</title >
+                                     <title > scde_SAS: ', paste(levels(groups), collapse = " vs. "), '</title >
 
                                      <!--<link rel = "stylesheet" type = "text/css" href = "http://pklab.med.harvard.edu/sde/extjs/resources/ext-theme-neptune/ext-theme-neptune-all.css" / >-->
                                      <link rel="stylesheet" type="text/css" href="http://pklab.med.harvard.edu/sde/ext-4.2.1.883/resources/css/ext-all.css" />
@@ -5584,7 +5584,7 @@ ViewDiff <- setRefClass(
                        t <- tempfile()
                        #require(Cairo)
                        CairoPNG(filename = t, width = 350, height = 560)
-                       scde.test.gene.expression.difference(gene = gene, models = models, counts = counts, groups = groups, prior = prior, batch = batch, ratio.range = c(-10, 10), show.individual.posteriors = show.individual.posteriors, verbose = FALSE)
+                       scde_SAS.test.gene.expression.difference(gene = gene, models = models, counts = counts, groups = groups, prior = prior, batch = batch, ratio.range = c(-10, 10), show.individual.posteriors = show.individual.posteriors, verbose = FALSE)
                        dev.off()
                        res$header('Content-type', 'image/png')
                        res$body <- t
@@ -5594,7 +5594,7 @@ ViewDiff <- setRefClass(
                    '/elevels.html' = {
                        geneName <- ifelse(is.null(req$params()$geneName), gt$gene[[1]], req$params()$geneName)
                        gc <- counts[rownames(counts) == geneName, , drop = FALSE]
-                       fpm <- exp(scde.expression.magnitude(models, counts = gc))
+                       fpm <- exp(scde_SAS.expression.magnitude(models, counts = gc))
                        df <- rbind(FPM = gc, level = fpm)
                        df <- round(df, 2)
                        # order columns according to groups
@@ -6245,7 +6245,7 @@ ViewPagodaApp <- setRefClass(
                        pat <- fromJSON(URLdecode(req$POST()$pattern))
                        # reorder the pattern back according to column clustering
                        pat[results$hvc$order] <- pat
-                       patc <- .Call("matCorr", as.matrix(t(mat)), as.matrix(pat, ncol = 1) , PACKAGE = "scde")
+                       patc <- .Call("matCorr", as.matrix(t(mat)), as.matrix(pat, ncol = 1) , PACKAGE = "scde_SAS")
                        if(twosided) { patc <- abs(patc) }
                        mgenes <- rownames(mat)[order(as.numeric(patc), decreasing = TRUE)[1:ngenes]]
                        ol <- getgenecldata(mgenes, ltrim = ltrim)
@@ -6448,8 +6448,8 @@ ListPagodaAppsApp <- setRefClass(
       res <- Response$new()
       switch(path,
              { # default
-               if(exists("___scde.server", envir = globalenv())) {
-                 server <- get("___scde.server", envir = globalenv())
+               if(exists("___scde_SAS.server", envir = globalenv())) {
+                 server <- get("___scde_SAS.server", envir = globalenv())
                  content <- '<table id="apps" class="table table-striped table-bordered" cellspacing="0" width="100%">
         <thead>
             <tr>
@@ -6511,7 +6511,7 @@ ListPagodaAppsApp <- setRefClass(
 
        <div class="header clearfix">
 
-        <h1 class="text-muted"><a href="http://pklab.med.harvard.edu/scde/">SCDE</a></h1>
+        <h1 class="text-muted"><a href="http://pklab.med.harvard.edu/scde_SAS/">scde_SAS</a></h1>
       </div>
 
       

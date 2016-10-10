@@ -12,9 +12,9 @@ vignette: |
 
 # Pathway and Gene Set Overdispersion Analysis
 
-In this vignette, we show you how to use `pagoda` routines in the `scde` package to characterize aspects of transcriptional heterogeneity in populations of single cells. 
+In this vignette, we show you how to use `pagoda` routines in the `scde_SAS` package to characterize aspects of transcriptional heterogeneity in populations of single cells. 
 
-The `pagoda` routines implemented in the `scde` resolves multiple, potentially overlapping aspects of transcriptional heterogeneity by identifying known pathways or novel gene sets that show significant excess of coordinated variability among the measured cells. Briefly, cell-specific error models derived from `scde` are used to estimate residual gene expression variance, and identify pathways and gene sets that exhibit statistically significant excess of coordinated variability (overdispersion). `pagoda` can be used to effectively recover known subpopulations and discover putative new subpopulations and their corresponding functional characteristics in single-cell samples. For more information, please refer to the original manuscript by [_Fan et al._](http://biorxiv.org/content/early/2015/09/16/026948).
+The `pagoda` routines implemented in the `scde_SAS` resolves multiple, potentially overlapping aspects of transcriptional heterogeneity by identifying known pathways or novel gene sets that show significant excess of coordinated variability among the measured cells. Briefly, cell-specific error models derived from `scde_SAS` are used to estimate residual gene expression variance, and identify pathways and gene sets that exhibit statistically significant excess of coordinated variability (overdispersion). `pagoda` can be used to effectively recover known subpopulations and discover putative new subpopulations and their corresponding functional characteristics in single-cell samples. For more information, please refer to the original manuscript by [_Fan et al._](http://biorxiv.org/content/early/2015/09/16/026948).
 
 ```{r, include = FALSE}
 library(knitr)
@@ -26,7 +26,7 @@ opts_chunk$set(
     cache.path = 'cache/pagoda-',
     cache = TRUE
 )
-library(scde)
+library(scde_SAS)
 ```
 
 ## Preparing data
@@ -98,7 +98,7 @@ varinfo <- pagoda.subtract.aspect(varinfo, colSums(cd[, rownames(knn)]>0))
 
 In order to detect significant aspects of heterogeneity across the population of single cells, 'pagoda' identifies pathways and gene sets that exhibit statistically significant excess of coordinated variability. Specifically, for each gene set, we tested whether the amount of variance explained by the first principal component significantly exceed the background expectation. We can test both pre-defined gene sets as well as 'de novo' gene sets whose expression profiles are well-correlated within the given dataset. 
 
-For pre-defined gene sets, we'll use GO annotations. For the purposes of this vignette, in order to make calculations faster, we will only consider the first 100 GO terms plus a few that we care about. Additional tutorials on how to create and use your own gene sets can be found in [a separate tutorial](http://hms-dbmi.github.io/scde/genesets.html). 
+For pre-defined gene sets, we'll use GO annotations. For the purposes of this vignette, in order to make calculations faster, we will only consider the first 100 GO terms plus a few that we care about. Additional tutorials on how to create and use your own gene sets can be found in [a separate tutorial](http://hms-dbmi.github.io/scde_SAS/genesets.html). 
 
 ```{r, goenv}
 library(org.Hs.eg.db)

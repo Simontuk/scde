@@ -1,14 +1,14 @@
 Single-Cell Differential Expression Analysis
 ============================================
 
-In this vignette, we show you how perform single cell differential expression analysis using single cell RNA-seq data with the `scde` package.
+In this vignette, we show you how perform single cell differential expression analysis using single cell RNA-seq data with the `scde_SAS` package.
 
-The `scde` package implements routines for fitting individual error models for single-cell RNA-seq measurements. Briefly, the read counts observed for each gene are modeled using a mixture of a negative binomial (NB) distribution (for the amplified/detected transcripts) and low-level Poisson distribution (for the unobserved or background-level signal of genes that failed to amplify or were not detected for other reasons). These models can then be used to identify robustly differentially expressed genes between groups of cells. For more information, please refer to the original manuscript by [*Kharchenko et al.*](http://www.ncbi.nlm.nih.gov/pubmed/24836921).
+The `scde_SAS` package implements routines for fitting individual error models for single-cell RNA-seq measurements. Briefly, the read counts observed for each gene are modeled using a mixture of a negative binomial (NB) distribution (for the amplified/detected transcripts) and low-level Poisson distribution (for the unobserved or background-level signal of genes that failed to amplify or were not detected for other reasons). These models can then be used to identify robustly differentially expressed genes between groups of cells. For more information, please refer to the original manuscript by [*Kharchenko et al.*](http://www.ncbi.nlm.nih.gov/pubmed/24836921).
 
 Preparing data
 --------------
 
-The analysis starts with a matrix of read counts. Depending on the protocol, these may be raw numbers of reads mapped to each gene, or count values adjusted for potential biases (sequence dependency, splice variant coverage, etc. - the values must be integers). The `scde` package includes a subset of the ES/MEF cell dataset published by [*Islam et al.*](http://www.ncbi.nlm.nih.gov/pubmed/24363023). The subset includes first 20 ES and MEF cells. Here we load the cells and define a factor separating ES and MEF cell types:
+The analysis starts with a matrix of read counts. Depending on the protocol, these may be raw numbers of reads mapped to each gene, or count values adjusted for potential biases (sequence dependency, splice variant coverage, etc. - the values must be integers). The `scde_SAS` package includes a subset of the ES/MEF cell dataset published by [*Islam et al.*](http://www.ncbi.nlm.nih.gov/pubmed/24363023). The subset includes first 20 ES and MEF cells. Here we load the cells and define a factor separating ES and MEF cell types:
 
 ``` r
 # load example dataset
@@ -40,7 +40,7 @@ Note this step takes a considerable amount of time unless multiple cores are use
 ``` r
 # EVALUATION NOT NEEDED
 # calculate models
-o.ifm <- scde.error.models(counts = cd, groups = sg, n.cores = 1, threshold.segmentation = TRUE, save.crossfit.plots = FALSE, save.model.plots = FALSE, verbose = 1)
+o.ifm <- scde_SAS.error.models(counts = cd, groups = sg, n.cores = 1, threshold.segmentation = TRUE, save.crossfit.plots = FALSE, save.model.plots = FALSE, verbose = 1)
 ```
 
 For the purposes of this vignette, the model has been precomputed and can simply be loaded.
@@ -80,7 +80,7 @@ Finally, we need to define an expression magnitude prior for the genes. Its main
 
 ``` r
 # estimate gene expression prior
-o.prior <- scde.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
+o.prior <- scde_SAS.expression.prior(models = o.ifm, counts = cd, length.out = 400, show.plot = FALSE)
 ```
 
 Here we used a grid of 400 points, and let the maximum expression magnitude be determined by the default 0.999 quantile (use `max.value` parameter to specify the maximum expression magnitude explicitly - on log10 scale).
@@ -95,7 +95,7 @@ To test for differential expression, we first define a factor that specifies whi
 groups <- factor(gsub("(MEF|ESC).*", "\\1", rownames(o.ifm)), levels  =  c("ESC", "MEF"))
 names(groups) <- row.names(o.ifm)
 # run differential expression tests on all genes.
-ediff <- scde.expression.difference(o.ifm, cd, o.prior, groups  =  groups, n.randomizations  =  100, n.cores  =  1, verbose  =  1)
+ediff <- scde_SAS.expression.difference(o.ifm, cd, o.prior, groups  =  groups, n.randomizations  =  100, n.cores  =  1, verbose  =  1)
 ```
 
     ## comparing groups:
@@ -126,19 +126,19 @@ write.table(ediff[order(abs(ediff$Z), decreasing = TRUE), ], file = "results.txt
 One can also browse the differentially expressed genes, along with the associated posterior distributions, using a web browser application. The command below will start an internal web server accessible on port 1299 and call up a browser to point to the resulting page (note: internal browser doesn't work under RStudio)
 
 ``` r
-scde.browse.diffexp(ediff, o.ifm, cd, o.prior, groups = groups, name = "diffexp1", port = 1299)
+scde_SAS.browse.diffexp(ediff, o.ifm, cd, o.prior, groups = groups, name = "diffexp1", port = 1299)
 ```
 
 Alternatively we can run the differential expression on a single gene, and visualize the results:
 
 ``` r
-scde.test.gene.expression.difference("Tdh", models = o.ifm, counts = cd, prior = o.prior)
+scde_SAS.test.gene.expression.difference("Tdh", models = o.ifm, counts = cd, prior = o.prior)
 ```
 
     ##           lb     mle       ub       ce        Z       cZ
     ## Tdh 5.728235 8.03544 10.30287 5.728235 7.151425 7.151425
 
-![](figures/scde-diffexp3-1.png)
+![](figures/scde_SAS-diffexp3-1.png)
 
 The top and the bottom plots show expression posteriors derived from individual cells (colored lines) and joint posteriors (black lines). The middle plot shows posterior of the expression fold difference between the two cell groups, highlighting the 95% credible interval by the red shading.
 
@@ -160,13 +160,13 @@ table(groups, batch)
 
 ``` r
 # test the Tdh gene again
-scde.test.gene.expression.difference("Tdh", models = o.ifm, counts = cd, prior = o.prior, batch = batch)
+scde_SAS.test.gene.expression.difference("Tdh", models = o.ifm, counts = cd, prior = o.prior, batch = batch)
 ```
 
     ##           lb      mle       ub       ce        Z       cZ
     ## Tdh 3.659705 7.796764 12.01338 3.659705 3.782082 3.782082
 
-![](figures/scde-batch-1.png)
+![](figures/scde_SAS-batch-1.png)
 
 In the plot above, the grey lines are used to show posterior distributions based on the batch composition alone. The expression magnitude posteriors (top and bottom plots) look very similar, and as a result the log2 expression ratio posterior is close to 0. The thin black line shows log2 expression ratio posterior before correction. The batch correction doesn't shift the location, but increases uncertainty in the ratio estimate (since we're controlling for another factor).
 
@@ -174,7 +174,7 @@ Similarly, batch correction can be performed when calculating expression differe
 
 ``` r
 # test for all of the genes
-ediff.batch <- scde.expression.difference(o.ifm, cd, o.prior, groups = groups, batch = batch, n.randomizations = 100, n.cores = 1, return.posteriors = TRUE, verbose = 1)
+ediff.batch <- scde_SAS.expression.difference(o.ifm, cd, o.prior, groups = groups, batch = batch, n.randomizations = 100, n.cores = 1, return.posteriors = TRUE, verbose = 1)
 ```
 
     ## controlling for batch effects. interaction:
@@ -190,42 +190,42 @@ ediff.batch <- scde.expression.difference(o.ifm, cd, o.prior, groups = groups, b
 
 ### More detailed functions
 
-The `scde.expression.difference` method can return a more extensive set of results, including joint posteriors and the expression fold difference posteriors for all of the exam ined genes:
+The `scde_SAS.expression.difference` method can return a more extensive set of results, including joint posteriors and the expression fold difference posteriors for all of the exam ined genes:
 
 The joint posteriors can also be obtained explicitly for a particular set of cells:
 
 ``` r
 # calculate joint posterior for ESCs (set return.individual.posterior.modes=T if you need p.modes)
-jp <- scde.posteriors(models = o.ifm[grep("ESC",rownames(o.ifm)), ], cd, o.prior, n.cores = 1)
+jp <- scde_SAS.posteriors(models = o.ifm[grep("ESC",rownames(o.ifm)), ], cd, o.prior, n.cores = 1)
 ```
 
 The error models fit the intercept and the slope of the NB "correlated" component, providing more consistent expression magnitude estimates among the cells. These can be obtain ed with a quick helper function:
 
 ``` r
 # get expression magntiude estimates
-o.fpm <- scde.expression.magnitude(o.ifm, counts = cd)
+o.fpm <- scde_SAS.expression.magnitude(o.ifm, counts = cd)
 ```
 
 Drop-out probabilities (as a function of expression magnitudes) for different cells are useful for assessing the quality of the measurements:
 
 ``` r
 # get failure probabilities on the expresison range
-o.fail.curves <- scde.failure.probability(o.ifm, magnitudes = log((10^o.prior$x)-1))
+o.fail.curves <- scde_SAS.failure.probability(o.ifm, magnitudes = log((10^o.prior$x)-1))
 par(mfrow = c(1,1), mar = c(3.5,3.5,0.5,0.5), mgp = c(2.0,0.65,0), cex = 1)
 plot(c(), c(), xlim=range(o.prior$x), ylim=c(0,1), xlab="expression magnitude (log10)", ylab="drop-out probability")
 invisible(apply(o.fail.curves[, grep("ES",colnames(o.fail.curves))], 2, function(y) lines(x = o.prior$x, y = y,col = "orange")))
 invisible(apply(o.fail.curves[, grep("MEF", colnames(o.fail.curves))], 2, function(y) lines(x = o.prior$x, y = y, col = "dodgerblue")))
 ```
 
-![](figures/scde-detailed4-1.png)
+![](figures/scde_SAS-detailed4-1.png)
 
 The drop-out probabilities (at a given expression magnitude, or at an observed count) can be useful in subsequent analysis
 
 ``` r
 # get failure probabilities on the expresison range
-o.fail.curves <- scde.failure.probability(o.ifm, magnitudes = log((10^o.prior$x)-1))
+o.fail.curves <- scde_SAS.failure.probability(o.ifm, magnitudes = log((10^o.prior$x)-1))
 # get self-fail probabilities (at a given observed count)
-p.self.fail <- scde.failure.probability(models = o.ifm, counts = cd)
+p.self.fail <- scde_SAS.failure.probability(models = o.ifm, counts = cd)
 ```
 
 Adjusted distance meaures
@@ -238,7 +238,7 @@ The dependency of drop-out probability on the average expression magntiude captu
 Direct weighting downweights the contribution of a given gene to the cell-to-cell distance based on the probability that the given measurement is a drop-out event (i.e. belongs to the drop-out component) - the "self-fail" probability shown in the previous section. To estimate the adjusted distance, we will simulate the drop-out events, replacing them with `NA` values, and calculating correlation using the remaining points:
 
 ``` r
-p.self.fail <- scde.failure.probability(models = o.ifm, counts = cd)
+p.self.fail <- scde_SAS.failure.probability(models = o.ifm, counts = cd)
 # simulate drop-outs
 # note: using 10 sampling rounds for illustration here. ~500 or more should be used.
 n.simulations <- 10; k <- 0.9;
@@ -269,8 +269,8 @@ k <- 0.95;
 reciprocal.dist <- as.dist(1 - do.call(rbind, mclapply(cell.names, function(nam1) {
   unlist(lapply(cell.names, function(nam2) {
     # reciprocal probabilities
-    f1 <- scde.failure.probability(models = o.ifm[nam1,,drop = FALSE], magnitudes = o.fpm[, nam2])
-    f2 <- scde.failure.probability(models = o.ifm[nam2,,drop = FALSE], magnitudes = o.fpm[, nam1])
+    f1 <- scde_SAS.failure.probability(models = o.ifm[nam1,,drop = FALSE], magnitudes = o.fpm[, nam2])
+    f2 <- scde_SAS.failure.probability(models = o.ifm[nam2,,drop = FALSE], magnitudes = o.fpm[, nam1])
     # weight factor
     pnf <- sqrt((1-f1)*(1-f2))*k +(1-k); 
     boot::corr(log10(cbind(cd[, nam1], cd[, nam2])+1), w = pnf)
@@ -284,10 +284,10 @@ A more reliable reference magnitude against which drop-out likelihood could be a
 
 ``` r
 # reclculate posteriors with the individual posterior modes 
-jp <- scde.posteriors(models = o.ifm, cd, o.prior, return.individual.posterior.modes = TRUE, n.cores = 1)
+jp <- scde_SAS.posteriors(models = o.ifm, cd, o.prior, return.individual.posterior.modes = TRUE, n.cores = 1)
 # find joint posterior modes for each gene - a measure of MLE of group-average expression
 jp$jp.modes <- log(as.numeric(colnames(jp$jp)))[max.col(jp$jp)]
-p.mode.fail <- scde.failure.probability(models = o.ifm, magnitudes = jp$jp.modes)
+p.mode.fail <- scde_SAS.failure.probability(models = o.ifm, magnitudes = jp$jp.modes)
 # weight matrix
 matw <- 1-sqrt(p.self.fail*sqrt(p.self.fail*p.mode.fail))
 # magnitude matrix (using individual posterior modes here)

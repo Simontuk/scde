@@ -29,7 +29,7 @@ opts_chunk$set(
     cache = TRUE
 )
 
-library(scde)
+library(scde_SAS)
 ```
 
 ## Simulating data for demonstration purposes

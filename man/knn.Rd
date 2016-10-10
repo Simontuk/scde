@@ -5,7 +5,7 @@
 \alias{knn}
 \title{Sample error model}
 \description{
-SCDE error model generated from the Pollen et al. 2014 dataset.
+scde_SAS error model generated from the Pollen et al. 2014 dataset.
 }
 \references{
 \url{www.ncbi.nlm.nih.gov/pubmed/25086649}
